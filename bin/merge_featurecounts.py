@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pandas as pd
 import numpy as np
 import glob
@@ -46,15 +47,17 @@ args = parser.parse_args()
 assert(len(args.raw_count_filenames)==len(args.summary_filenames))
 
 output_prefix = args.output_prefix
-
-temp_filename = '{}_counts.tsv.temp'.format(output_prefix)
+input_filenames = args.raw_count_filenames
 
 #Open temporary file for appending data to
+temp_filename = '{}_counts.tsv.temp'.format(output_prefix)
 out_tempfile = open(temp_filename, 'w')
+
+print('Merging {} files...'.format(len(input_filenames)))
 
 #Concatenate featurecounts files
 list_of_dfs = []
-for idx,filename in enumerate(args.raw_count_filenames):
+for idx,filename in enumerate(input_filenames):
     df_temp = pd.read_csv(filename,sep='\t',index_col=0,header=1)
     row_names = list(df_temp.index)
     if idx==0:
@@ -73,6 +76,8 @@ for idx,filename in enumerate(args.raw_count_filenames):
     #Transpose and write to file
     df = df.transpose()
     df.to_csv(out_tempfile, sep='\t', header=(idx==0))
+    if idx%100==0 and idx!=0:
+        print('{} files processed.'.format(idx))
 
 out_tempfile.close()
 
